@@ -8,7 +8,8 @@
   },
   "scripts": {
     "build": "webpack --config webpack.config.js",
-    "start": "webpack-dev-server"
+    "start": "webpack-dev-server",
+    "clean": "rm -rf dist/"
   },
   "repository": {
     "type": "git",
@@ -34,6 +35,7 @@
     "copy-webpack-plugin": "^5.0.0"
   },
   "dependencies": {
+    "csv-loader": "^3.0.3",
     "webcsv": "file:../pkg"
   }
 }
