@@ -9,12 +9,13 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::Response;
 
-use std;
+use std::{self, error::Error, fs::File, path::Path};
 use std::collections::HashMap;
-use std::io::SeekFrom;
+use std::io;
 
 extern crate csv;
 use csv::{Position, Reader};
+use csv_index::RandomAccessSimple;
 
 extern crate serde;
 
@@ -117,4 +118,31 @@ pub async fn fetch_file(file_path: String) -> Result<String, String> {
         None => String::from(""),
     };
     Ok(file_string)
+}
+
+#[wasm_bindgen]
+impl CsvFile {
+    pub fn create_index_file(file_path: String) -> Result<String, JsValue> {
+        let index = CsvFile::create_index_sync(file_path);
+
+        let mut index = match index {
+            Ok(i) => JsValue::from("success"),
+            Err(e) => JsValue::from("couldn't create index"),
+        };
+        Ok("success".to_string())
+    }
+}
+
+
+impl CsvFile {
+    pub fn create_index_sync(file_path: String) -> Result<RandomAccessSimple<File>, csv::Error> {
+        let mut reader = csv::Reader::from_path(file_path.to_owned())?;
+        let mut index_file_name: String = file_path.to_owned();
+        index_file_name.push_str(&".idx");
+    
+        let mut index_file = io::BufWriter::new(File::create(index_file_name.clone())?);
+        RandomAccessSimple::create(&mut reader, &mut index_file)?;
+    
+        return RandomAccessSimple::open(File::open(&index_file_name)?);
+    }
 }
